@@ -5,11 +5,49 @@ from django.conf import settings
 import os
 
 
-
-
-
 PROFILE_IMAGE_PATH = os.path.join('images','facebook_profiles/%Y/%m/%d')
 
+class FacebookUser(models.Model):
+    '''
+    Model for storing a users friends
+    '''
+    # in order to be able to easily move these to an another db,
+    # use a user_id and no foreign key
+    facebook_id = models.BigIntegerField()
+    name = models.TextField(blank=True, null=True)
+    gender = models.CharField(choices=(('F', 'female'),('M', 'male')), blank=True, null=True, max_length=1)
+
+    objects = model_managers.FacebookUserManager()
+        
+    def __unicode__(self):
+        return u'Facebook user %s' % self.name
+
+class FacebookGroup(models.Model):
+    fb_group_id = models.BigIntegerField()
+    owner_id = models.TextField(max_length=50)
+    group_name = models.TextField(max_length=50)
+    pic_url = models.TextField(max_length=512,blank=True)
+    description = models.TextField(max_length=1024,blank=True)
+    link = models.TextField(max_length=512,blank=True)
+    privacy = models.TextField(max_length=50,blank=True)
+    members = ListField(EmbeddedModelField('FacebookUser'))
+    last_sync_date = models.DateTimeField(default=datetime.now,blank=True)
+    created_date = models.DateTimeField(default=datetime.now,blank=True)
+    def __unicode__(self):
+        return u'Facebook group %s' % self.group_name
+
+class FacebookLike(models.Model):
+    '''
+    Model for storing all of a users fb likes
+    '''
+    # in order to be able to easily move these to an another db,
+    # use a user_id and no foreign key
+    facebook_id = models.BigIntegerField()
+    name = models.TextField(blank=True, null=True)
+    category = models.TextField(blank=True, null=True)
+    created_time = models.DateTimeField(blank=True, null=True)
+    def __unicode__(self):
+        return u'Facebook like %s' % self.name
 
 class FacebookProfileModel(models.Model):
     '''
@@ -29,6 +67,9 @@ class FacebookProfileModel(models.Model):
         upload_to=PROFILE_IMAGE_PATH, max_length=255)
     date_of_birth = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=1, choices=(('m', 'Male'), ('f', 'Female')), blank=True, null=True)
+    friends = ListField(EmbeddedModelField('FacebookUser'))
+    likes = ListField(EmbeddedModelField('FacebookLike'))
+    groups = ListField(EmbeddedModelField('FacebookGroup'))
     raw_data = models.TextField(blank=True)
 
     def __unicode__(self):
@@ -36,14 +77,6 @@ class FacebookProfileModel(models.Model):
 
     class Meta:
         abstract = True
-        
-    def likes(self):
-        likes = FacebookLike.objects.filter(user_id=self.user_id)
-        return likes
-    
-    def friends(self):
-        friends = FacebookUser.objects.filter(user_id=self.user_id)
-        return friends
 
     def post_facebook_registration(self, request):
         '''
@@ -72,43 +105,6 @@ class FacebookProfileModel(models.Model):
             graph.current_user_id = self.facebook_id
             return graph
         
-
-
-
-class FacebookUser(models.Model):
-    '''
-    Model for storing a users friends
-    '''
-    # in order to be able to easily move these to an another db,
-    # use a user_id and no foreign key
-    user_id = models.IntegerField()
-    facebook_id = models.BigIntegerField()
-    name = models.TextField(blank=True, null=True)
-    gender = models.CharField(choices=(('F', 'female'),('M', 'male')), blank=True, null=True, max_length=1)
-
-    objects = model_managers.FacebookUserManager()
-
-    class Meta:
-        unique_together = ['user_id', 'facebook_id']
-        
-    def __unicode__(self):
-        return u'Facebook user %s' % self.name
-
-
-class FacebookLike(models.Model):
-    '''
-    Model for storing all of a users fb likes
-    '''
-    # in order to be able to easily move these to an another db,
-    # use a user_id and no foreign key
-    user_id = models.IntegerField()
-    facebook_id = models.BigIntegerField()
-    name = models.TextField(blank=True, null=True)
-    category = models.TextField(blank=True, null=True)
-    created_time = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        unique_together = ['user_id', 'facebook_id']
         
 
 class FacebookProfile(FacebookProfileModel):

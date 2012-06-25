@@ -14,7 +14,7 @@ class FacebookUserManager(models.Manager):
         Base Queryset, the base queryset in which we are searching
         '''
         if base_queryset is None:
-            base_queryset = self.all()
+            base_queryset = self.friends()
         filters = []
         for query in queries:
             match = Q(name__istartswith=query) | Q(name__icontains=' %s' % query)

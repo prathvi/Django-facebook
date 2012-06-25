@@ -485,11 +485,13 @@ class FacebookUserConverter(object):
 
     @classmethod
     def _store_likes(self, user, likes):
+        from django_facebook.utils import get_profile_class
+        profile_class = get_profile_class()
         current_likes = inserted_likes = None
         
         if likes:
             from django_facebook.models import FacebookLike
-            base_queryset = FacebookLike.objects.filter(user_id=user.id)
+            base_queryset = profile_class.objects.filter(user_id=user.id).likes
             global_defaults = dict(user_id=user.id)
             id_field = 'facebook_id'
             default_dict = {}
@@ -575,17 +577,14 @@ class FacebookUserConverter(object):
     @classmethod
     def _store_friends(self, user, friends):
         from django_facebook.models import FacebookUser
+        from django_facebook.utils import get_profile_class
+        profile_class = get_profile_class()
         current_friends = inserted_friends = None
         
         #store the users for later retrieval
         if friends:
             #see which ids this user already stored
-            base_queryset = FacebookUser.objects.filter(user_id=user.id)
-            #if none if your friend have a gender clean the old data
-            genders = FacebookUser.objects.filter(user_id=user.id, gender__in=('M','F')).count()
-            if not genders:
-                FacebookUser.objects.filter(user_id=user.id).delete()
-            
+            base_queryset = profile_class.objects.filter(user_id=user.id).friends
             global_defaults = dict(user_id=user.id)
             default_dict = {}
             gender_map = dict(female='F', male='M')

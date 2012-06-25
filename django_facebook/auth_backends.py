@@ -3,7 +3,6 @@ from django.db.utils import DatabaseError
 from django_facebook.utils import get_profile_class
 #from user import models as models_user
 
-
 class FacebookBackend(backends.ModelBackend):
     def authenticate(self, facebook_id=None, facebook_email=None):
         '''
@@ -11,6 +10,7 @@ class FacebookBackend(backends.ModelBackend):
         We filter using an OR to allow existing members to connect with
         their facebook ID using email.
         '''
+        from django_facebook.utils import get_profile_class
         if facebook_id or facebook_email:
             profile_class = get_profile_class()
             profile_query = profile_class.objects.all().order_by('user')

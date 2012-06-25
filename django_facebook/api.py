@@ -1,8 +1,7 @@
 from django.forms.util import ValidationError
 from django.utils import simplejson as json
 from django_facebook import settings as facebook_settings
-from django_facebook.utils import mass_get_or_create, cleanup_oauth_url,\
-    get_profile_class
+from django_facebook.utils import mass_get_or_create, cleanup_oauth_url,get_profile_class
 from open_facebook.exceptions import OpenFacebookException
 import datetime
 import logging
@@ -484,39 +483,43 @@ class FacebookUserConverter(object):
             self._store_likes(user, likes)
 
     @classmethod
-    def _store_likes(self, user, likes):
+    def _store_likes(self, auth_user, likes):
         from django_facebook.utils import get_profile_class
         profile_class = get_profile_class()
         current_likes = inserted_likes = None
         
         if likes:
+            from django_facebook.models import FacebookProfileModel
             from django_facebook.models import FacebookLike
-            base_queryset = profile_class.objects.filter(user_id=user.id).likes
-            global_defaults = dict(user_id=user.id)
-            id_field = 'facebook_id'
-            default_dict = {}
-            for like in likes:
-                name = like.get('name')
-                created_time_string = like.get('created_time')
-                created_time = None
-                if created_time_string:
-                    created_time = datetime.datetime.strptime(
-                        like['created_time'], "%Y-%m-%dT%H:%M:%S+0000")
-                default_dict[like['id']] = dict(
-                    created_time=created_time,
-                    category=like.get('category'),
-                    name=name
-                )
-            current_likes, inserted_likes = mass_get_or_create(
-                FacebookLike, base_queryset, id_field, default_dict,
-                global_defaults)
-            logger.debug('found %s likes and inserted %s new likes',
-                         len(current_likes), len(inserted_likes))
+            base_object = profile_class.objects.get(user=auth_user.id)
+            count = 0
+            likes_list = list()
+            if not len(base_object.likes):
+                for like in likes:
+                    count = count+1
+                    name = like.get('name')
+                    created_time_string = like.get('created_time')
+                    created_time = None
+                    if created_time_string:
+                        created_time = datetime.datetime.strptime(
+                            like['created_time'], "%Y-%m-%dT%H:%M:%S+0000")
+                
+                    fbLike = FacebookLike()
+                    fbLike.facebook_id = like.get('id')
+                    fbLike.name = name
+                    fbLike.category = like.get('category')
+                    fbLike.created_time = created_time
+                    likes_list.append(fbLike)
+            
+            base_object.likes = likes_list
+            base_object.save()
+            logger.debug('found %s likes and inserted',
+                         count)
 
         #fire an event, so u can do things like personalizing the users' account
         #based on the likes
         signals.facebook_post_store_likes.send(sender=get_profile_class(),
-            user=user, likes=likes, current_likes=current_likes,
+            user=auth_user, likes=likes, current_likes=current_likes,
             inserted_likes=inserted_likes,
         )
         
@@ -549,7 +552,7 @@ class FacebookUserConverter(object):
         friends = getattr(self, '_friends', None)
         if friends is None:
             friends_response = self.open_facebook.fql(
-                "SELECT uid, name, sex FROM user WHERE uid IN (SELECT uid2 " \
+                "SELECT uid, name, sex,timezone, hometown_location, current_location FROM user WHERE uid IN (SELECT uid2 " \
                 "FROM friend WHERE uid1 = me()) LIMIT %s" % limit)
             # friends_response = self.open_facebook.get('me/friends',
             #                                           limit=limit)
@@ -575,7 +578,7 @@ class FacebookUserConverter(object):
             self._store_friends(user, friends)
 
     @classmethod
-    def _store_friends(self, user, friends):
+    def _store_friends(self, auth_user, friends):
         from django_facebook.models import FacebookUser
         from django_facebook.utils import get_profile_class
         profile_class = get_profile_class()
@@ -583,29 +586,35 @@ class FacebookUserConverter(object):
         
         #store the users for later retrieval
         if friends:
-            #see which ids this user already stored
-            base_queryset = profile_class.objects.filter(user_id=user.id).friends
-            global_defaults = dict(user_id=user.id)
-            default_dict = {}
+            from django_facebook.models import FacebookProfileModel
+            from django_facebook.models import FacebookUser
+            base_object = profile_class.objects.get(user=auth_user.id)
+            count = 0
+            friends_list = list()
             gender_map = dict(female='F', male='M')
-            for f in friends:
-                name = f.get('name')
-                gender = None
-                if f.get('sex'):
-                    gender = gender_map[f.get('sex')]
-                default_dict[str(f['id'])] = dict(name=name, gender=gender)
-            id_field = 'facebook_id'
+            if not len(base_object.friends):
+                for f in friends:
+                    count = count+1
+                    friend = FacebookUser()
+                    friend.facebook_id = f.get('id')
+                    friend.name = f.get('name')
+                    friend.gender = None
+                    if f.get('sex'):
+                        friend.gender = gender_map[f.get('sex')]
+                    friend.timezone = f.get('timezone')
+                    friend.current_location = f.get('current_location')
+                    friend.hometown_location = f.get('hometown_location')
+                    friends_list.append(friend)
 
-            current_friends, inserted_friends = mass_get_or_create(
-                FacebookUser, base_queryset, id_field, default_dict,
-                global_defaults)
-            logger.debug('found %s friends and inserted %s new ones',
-                         len(current_friends), len(inserted_friends))
+            base_object.friends = friends_list
+            base_object.save()
+            logger.debug('found %s friends and inserted',
+                         count)
             
         #fire an event, so u can do things like personalizing suggested users
         #to follow
         signals.facebook_post_store_friends.send(sender=get_profile_class(),
-            user=user, friends=friends, current_friends=current_friends,
+            user=auth_user, friends=friends, current_friends=current_friends,
             inserted_friends=inserted_friends,
         )
 

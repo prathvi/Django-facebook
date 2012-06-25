@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.urlresolvers import reverse
+from djangotoolbox.fields import ListField
+from djangotoolbox.fields import EmbeddedModelField
 from django_facebook import model_managers
+from datetime import datetime
 from django.conf import settings
 import os
 
@@ -16,9 +19,9 @@ class FacebookUser(models.Model):
     facebook_id = models.BigIntegerField()
     name = models.TextField(blank=True, null=True)
     gender = models.CharField(choices=(('F', 'female'),('M', 'male')), blank=True, null=True, max_length=1)
-
-    objects = model_managers.FacebookUserManager()
-        
+    timezone = models.TextField(blank=True, null=True)
+    current_location = models.TextField(blank=True, null=True)
+    hometown_location = models.TextField(blank=True, null=True)
     def __unicode__(self):
         return u'Facebook user %s' % self.name
 

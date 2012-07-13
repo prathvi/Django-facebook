@@ -608,21 +608,21 @@ class FacebookUserConverter(object):
                     #decoder = json.JSONDecoder()
                     locdata = f.get('current_location')
                     location = FacebookLocation()
-                    location.id = locdata['id']
-                    location.name = locdata['name']
-                    location.city = locdata['city']
-                    location.state = locdata['state']
-                    location.zip = location['zip']
-                    location.country = location['country']
+                    location.id = locdata.get('id')
+                    location.name = locdata.get('name')
+                    location.city = locdata.get('city')
+                    location.state = locdata.get('state')
+                    location.zip = location.get('zip')
+                    location.country = location.get('country')
                     friend.current_location = location
                     locdata = f.get('hometown_location')
                     location = FacebookLocation()
-                    location.id = locdata['id']
-                    location.name = locdata['name']
-                    location.city = locdata['city']
-                    location.state = locdata['state']
-                    location.zip = location['zip']
-                    location.country = location['country']
+                    location.id = locdata.get('id')
+                    location.name = locdata.get('name')
+                    location.city = locdata.get('city')
+                    location.state = locdata.get('state')
+                    location.zip = location.get('zip')
+                    location.country = location.get('country')
                     friend.hometown_location = location
                     friends_list.append(friend)
 

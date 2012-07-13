@@ -10,16 +10,6 @@ import os
 
 
 PROFILE_IMAGE_PATH = os.path.join('images','facebook_profiles/%Y/%m/%d')
-class FacebookLocation(models.Model):
-    id = models.BigIntegerField()
-    city = models.TextField(blank=True, null=True)
-    name = models.TextField(blank=True, null=True)
-    zip = models.TextField(blank=True, null=True)
-    country = models.TextField(blank=True, null=True)
-    state = models.TextField(blank=True, null=True)
-    
-    def __unicode__(self):
-        return u'Location: %s' % self.name
 
 class FacebookUser(models.Model):
     '''

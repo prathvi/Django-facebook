@@ -9,6 +9,17 @@ import os
 
 
 PROFILE_IMAGE_PATH = os.path.join('images','facebook_profiles/%Y/%m/%d')
+class FacebookLocation(models.Model):
+    id = models.BigIntegerField()
+    city = models.TextField(blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+    zip = models.TextField(blank=True, null=True)
+    country = models.TextField(blank=True, null=True)
+    state = models.TextField(blank=True, null=True)
+    class Meta:
+        abstract = True
+    def __unicode__(self):
+        return u'Location: %s' % self.name
 
 class FacebookUser(models.Model):
     '''
@@ -20,8 +31,10 @@ class FacebookUser(models.Model):
     name = models.TextField(blank=True, null=True)
     gender = models.CharField(choices=(('F', 'female'),('M', 'male')), blank=True, null=True, max_length=1)
     timezone = models.TextField(blank=True, null=True)
-    current_location = models.TextField(blank=True, null=True)
-    hometown_location = models.TextField(blank=True, null=True)
+    current_location = EmbeddedModelField('Location')
+    hometown_location = EmbeddedModelField('Location')
+    class Meta:
+        abstract = True
     def __unicode__(self):
         return u'Facebook user %s' % self.name
 
@@ -36,6 +49,8 @@ class FacebookGroup(models.Model):
     members = ListField(EmbeddedModelField('FacebookUser'))
     last_sync_date = models.DateTimeField(default=datetime.now,blank=True)
     created_date = models.DateTimeField(default=datetime.now,blank=True)
+    class Meta:
+        abstract = True
     def __unicode__(self):
         return u'Facebook group %s' % self.group_name
 
@@ -49,6 +64,8 @@ class FacebookLike(models.Model):
     name = models.TextField(blank=True, null=True)
     category = models.TextField(blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
+    class Meta:
+        abstract = True
     def __unicode__(self):
         return u'Facebook like %s' % self.name
 

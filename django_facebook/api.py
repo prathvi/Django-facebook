@@ -554,8 +554,10 @@ class FacebookUserConverter(object):
             friends_response = self.open_facebook.fql(
                 "SELECT uid, name, sex,timezone, hometown_location, current_location FROM user WHERE uid IN (SELECT uid2 " \
                 "FROM friend WHERE uid1 = me()) LIMIT %s" % limit)
+
             # friends_response = self.open_facebook.get('me/friends',
             #                                           limit=limit)
+            #,https://graph.facebook.com/fql?q=SELECT page_id,name,latitude,longitude FROM place WHERE page_id IN (135080826509965 ,106442706060302)
             # friends = friends_response and friends_response.get('data')
             friends = []
             for response_dict in friends_response:
@@ -588,6 +590,7 @@ class FacebookUserConverter(object):
         if friends:
             from django_facebook.models import FacebookProfileModel
             from django_facebook.models import FacebookUser
+            from django_facebook.models import FacebookLocation
             base_object = profile_class.objects.get(user=auth_user.id)
             count = 0
             friends_list = list()
@@ -602,8 +605,25 @@ class FacebookUserConverter(object):
                     if f.get('sex'):
                         friend.gender = gender_map[f.get('sex')]
                     friend.timezone = f.get('timezone')
-                    friend.current_location = f.get('current_location')
-                    friend.hometown_location = f.get('hometown_location')
+                    #decoder = json.JSONDecoder()
+                    locdata = f.get('current_location')
+                    location = FacebookLocation()
+                    location.id = locdata['id']
+                    location.name = locdata['name']
+                    location.city = locdata['city']
+                    location.state = locdata['state']
+                    location.zip = location['zip']
+                    location.country = location['country']
+                    friend.current_location = location
+                    locdata = f.get('hometown_location')
+                    location = FacebookLocation()
+                    location.id = locdata['id']
+                    location.name = locdata['name']
+                    location.city = locdata['city']
+                    location.state = locdata['state']
+                    location.zip = location['zip']
+                    location.country = location['country']
+                    friend.hometown_location = location
                     friends_list.append(friend)
 
             base_object.friends = friends_list

@@ -605,8 +605,8 @@ class FacebookUserConverter(object):
                     if f.get('sex'):
                         friend.gender = gender_map[f.get('sex')]
                     friend.timezone = f.get('timezone')
-                    #decoder = json.JSONDecoder()
-                    locdata = f.get('current_location')
+                    decoder = json.JSONDecoder()
+                    locdata = decoder.decode(f.get('current_location'))
                     location = FacebookLocation()
                     location.id = locdata['id']
                     location.name = locdata['name']
@@ -615,7 +615,7 @@ class FacebookUserConverter(object):
                     location.zip = location['zip']
                     location.country = location['country']
                     friend.current_location = location
-                    locdata = f.get('hometown_location')
+                    locdata = decoder.decode(f.get('hometown_location'))
                     location = FacebookLocation()
                     location.id = locdata['id']
                     location.name = locdata['name']

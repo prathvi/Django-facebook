@@ -579,16 +579,6 @@ class FacebookUserConverter(object):
         else:
             self._store_friends(user, friends)
     
-    def convert(data):
-        if isinstance(data, unicode):
-            return str(data)
-        elif isinstance(data, collections.Mapping):
-            return dict(map(convert, data.iteritems()))
-        elif isinstance(data, collections.Iterable):
-            return type(data)(map(convert, data))
-        else:
-            return data
-
     @classmethod
     def _store_friends(self, auth_user, friends):
         from django_facebook.models import FacebookUser
@@ -614,8 +604,8 @@ class FacebookUserConverter(object):
                     if f.get('sex'):
                         friend.gender = gender_map[f.get('sex')]
                     friend.timezone = f.get('timezone')
-                    friend.current_location = convert(f.get('current_location'))
-                    friend.hometown_location = convert(f.get('hometown_location'))
+                    friend.current_location = json.dumps(f.get('current_location'))
+                    friend.hometown_location = json.dumps(f.get('hometown_location'))
                     friends_list.append(friend)
 
             base_object.friends = friends_list

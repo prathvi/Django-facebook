@@ -557,7 +557,6 @@ class FacebookUserConverter(object):
 
             # friends_response = self.open_facebook.get('me/friends',
             #                                           limit=limit)
-            #,https://graph.facebook.com/fql?q=SELECT page_id,name,latitude,longitude FROM place WHERE page_id IN (135080826509965 ,106442706060302)
             # friends = friends_response and friends_response.get('data')
             friends = []
             for response_dict in friends_response:

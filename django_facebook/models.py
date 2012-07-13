@@ -30,8 +30,8 @@ class FacebookUser(models.Model):
     name = models.TextField(blank=True, null=True)
     gender = models.CharField(choices=(('F', 'female'),('M', 'male')), blank=True, null=True, max_length=1)
     timezone = models.TextField(blank=True, null=True)
-    current_location = EmbeddedModelField('Location')
-    hometown_location = EmbeddedModelField('Location')
+    current_location = EmbeddedModelField('FacebookLocation')
+    hometown_location = EmbeddedModelField('FacebookLocation')
     
     def __unicode__(self):
         return u'Facebook user %s' % self.name

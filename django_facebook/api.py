@@ -603,8 +603,8 @@ class FacebookUserConverter(object):
                     if f.get('sex'):
                         friend.gender = gender_map[f.get('sex')]
                     friend.timezone = f.get('timezone')
-                    friend.current_location = dict( (key.encode('ascii'), str(value)) for key, value in f.get('current_location').items())
-                    friend.hometown_location = dict( (key.encode('ascii'), str(value)) for key, value in f.get('hometown_location').items())
+                    friend.current_location = dict( (key.encode('ascii'), str(value)) for key, value in json.loads(f.get('current_location')).items())
+                    friend.hometown_location = dict( (key.encode('ascii'), str(value)) for key, value in json.loads(f.get('hometown_location')).items())
                     friends_list.append(friend)
 
             base_object.friends = friends_list

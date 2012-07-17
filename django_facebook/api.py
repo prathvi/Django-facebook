@@ -444,17 +444,21 @@ class FacebookUserConverter(object):
         slugified_name = slugified_name[:30]
         return slugified_name
 
-    def get_and_store_likes(self, user):
+    def get_and_store_likes(self, auth_user):
         '''
         Gets and stores your facebook likes to DB
         Both the get and the store run in a async task when
         FACEBOOK_CELERY_STORE = True
         '''
-        if facebook_settings.FACEBOOK_CELERY_STORE:
-            from django_facebook.tasks import get_and_store_likes
-            get_and_store_likes.delay(user, self)
-        else:
-            self._get_and_store_likes(user)
+        from django_facebook.utils import get_profile_class
+        profile_class = get_profile_class()
+        base_object = profile_class.objects.get(user=auth_user.id)
+        if not len(base_object.likes):
+            if facebook_settings.FACEBOOK_CELERY_STORE:
+                from django_facebook.tasks import get_and_store_likes
+                get_and_store_likes.delay(auth_user, self)
+            else:
+                self._get_and_store_likes(auth_user)
 
     def _get_and_store_likes(self, user):
         likes = self.get_likes()
@@ -525,17 +529,21 @@ class FacebookUserConverter(object):
         
         return likes
 
-    def get_and_store_friends(self, user):
+    def get_and_store_friends(self, auth_user):
         '''
         Gets and stores your facebook friends to DB
         Both the get and the store run in a async task when
         FACEBOOK_CELERY_STORE = True
         '''
-        if facebook_settings.FACEBOOK_CELERY_STORE:
-            from django_facebook.tasks import get_and_store_friends
-            get_and_store_friends.delay(user, self)
-        else:
-            self._get_and_store_friends(user)
+        from django_facebook.utils import get_profile_class
+        profile_class = get_profile_class()
+        base_object = profile_class.objects.get(user=auth_user.id)
+        if not len(base_object.friends):
+            if facebook_settings.FACEBOOK_CELERY_STORE:
+                from django_facebook.tasks import get_and_store_friends
+                get_and_store_friends.delay(auth_user, self)
+            else:
+                self._get_and_store_friends(auth_user)
 
     def _get_and_store_friends(self, user):
         '''

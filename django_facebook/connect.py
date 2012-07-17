@@ -85,9 +85,8 @@ def connect_user(request, access_token=None, facebook_graph=None):
             user = _register_user(request, facebook,
                                   remove_old_connections=force_registration)
             
-    _update_likes_and_friends(request, user, facebook)
-
     _update_access_token(user, graph)
+    _update_likes_and_friends(request, user, facebook)
     
     return action, user
 
